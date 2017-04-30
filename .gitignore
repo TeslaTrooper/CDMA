@@ -1,0 +1,12 @@
+.vs
+Debug
+x64
+CDMA.sdf
+CDMA.sln
+CDMA/Debug
+CDMA/CDMA.vcxproj
+CDMA/CDMA.vcxproj.filters
+CDMA/CDMA.vcxproj.user
+CDMA/x64
+CDMA.opensdf
+res/*
