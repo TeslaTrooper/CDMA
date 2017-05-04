@@ -174,17 +174,19 @@ int main(int argc, char* argv[]) {
 
 		peek const * const peeks = cross(data, seq);
 
-		if (peeks[0].value < 1022 - (3*63) && peeks[1].value > -1022 - (3*-65)) {
+		if (peeks[0].value < 1023 - (3*63) && peeks[1].value > -1023 - (3*-65)) {
 			continue;
 		}
 
 		float signal;
-		if(peeks[0].value > 1022)
+		if (peeks[0].value > 1023) {
 			signal = getSignal(data, seq, peeks[0].index);
-		else
+			cout << "Satellite " << i + 1 << " has sent Bit " << signal << " (delta = " << peeks[0].index << ")" << endl;
+		} else {
 			signal = getSignal(data, seq, peeks[1].index);
-
-		cout << "Satellite " << i+1 << " has sent Bit " << signal << " (delta = " << peeks[0].index << ")" << endl;
+			cout << "Satellite " << i + 1 << " has sent Bit " << signal << " (delta = " << peeks[1].index << ")" << endl;
+		}
+		
 	}
 
 	while (1);
