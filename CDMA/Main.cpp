@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -8,12 +9,7 @@ struct sat {
 	const int field2;
 };
 
-struct peek {
-	int value;
-	int index;
-};
-
-sat sats[24] = {
+const sat sats[24] = {
 	{ 1, 5 },
 	{ 2, 6 },
 	{ 3, 7 },
@@ -40,7 +36,13 @@ sat sats[24] = {
 	{ 3, 5 },
 }; 
 
-int* const read(char const * const file) {
+const int n = 10;
+// 1023 - anzahl störender satelliten * minimum
+// minimum siehe 598 gerade registerlänge
+const int HIGH_PEEK = 1023 + (3 * (-(pow(2, (n+2)/2))-1));
+const int LOW_PEEK = -1023 + (3 * (pow(2, (n + 2) / 2) - 1));
+
+int const * const read(char const * const file) {
 	int* const numbers = new int[1023];
 
 	fstream fp;
@@ -116,50 +118,25 @@ void shift(int* const reg, const int digits) {
 	Kreuzkorreliert das Summensignal mit der Chipsequenz und gibt die peeks an den 
 	entsprechenden Stellen zurück.
 */
-peek const * const cross(int const * const sum, int * const chipSeq) {
-	peek* peeks = new peek[2];
-	peeks[0] = { 0,0 };
-	peeks[1] = { 0,0 };
-	int currentSum;
-
-	for (int k = 0; k < 1023; k++) {
-		currentSum = 0;
+void cross(const int sat, int const * const sum, int * const chipSeq) {
+	for (int delta = 0; delta < 1023; delta++) {
+		int product = 0;
 
 		for (int i = 0; i < 1023; i++) {
-			currentSum += sum[i] * chipSeq[i];
+			product += sum[i] * chipSeq[i];
 		}
 
-		if (currentSum > peeks[0].value) {
-			peeks[0].value = currentSum;
-			peeks[0].index = k;
+		if (product >= HIGH_PEEK) {
+			cout << "Satellite " << sat << " has sent Bit 1 " << "(delta = " << delta << ")" << endl;
+			return;
 		}
-		if (currentSum < peeks[1].value) {
-			peeks[1].value = currentSum;
-			peeks[1].index = k;
+		if (product <= LOW_PEEK) {
+			cout << "Satellite " << sat << " has sent Bit 0 " << "(delta = " << delta << ")" << endl;
+			return;
 		}
 
 		shift(chipSeq, 1);
 	}
-
-	return peeks;
-}
-
-/*
-	Bildet das Skalarprodukt des Summensignals und der Chipsequenz. Hierbei wird
-	vor der Berechnung die Chipsequenz um delta verschoben.
-*/
-int getSignal(int const * const sum, int * const chipSeq, const int delta) {
-	int result = 0;
-
-	shift(chipSeq, delta);
-
-	for (int i = 0; i < 1023; i++) {
-		result += sum[i] * chipSeq[i];
-	}
-
-	result = (int) (result / 1023);
-
-	return result == -1 ? 0 : result;
 }
 
 int main(int argc, char* argv[]) {
@@ -167,29 +144,14 @@ int main(int argc, char* argv[]) {
 		cout << "Missing argument!";
 		return 1;
 	}
+
 	int const * const data = read(argv[1]);
 
-	for (int i = 0; i < 24; i++) {
-		int * const seq = generateChipSeq(sats[i]);
+	for (int sat = 0; sat < 24; sat++) {
+		int * const seq = generateChipSeq(sats[sat]);
 
-		peek const * const peeks = cross(data, seq);
-
-		if (peeks[0].value < 1023 - (3*63) && peeks[1].value > -1023 - (3*-65)) {
-			continue;
-		}
-
-		float signal;
-		if (peeks[0].value > 1023) {
-			signal = getSignal(data, seq, peeks[0].index);
-			cout << "Satellite " << i + 1 << " has sent Bit " << signal << " (delta = " << peeks[0].index << ")" << endl;
-		} else {
-			signal = getSignal(data, seq, peeks[1].index);
-			cout << "Satellite " << i + 1 << " has sent Bit " << signal << " (delta = " << peeks[1].index << ")" << endl;
-		}
-		
+		cross(sat + 1, data, seq);
 	}
-
-	while (1);
 	
 	return 0;
 }
