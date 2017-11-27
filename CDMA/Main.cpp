@@ -114,10 +114,6 @@ void shift(int* const reg, const int digits) {
 	}
 }
 
-/*
-	Kreuzkorreliert das Summensignal mit der Chipsequenz und gibt die peeks an den 
-	entsprechenden Stellen zurück.
-*/
 void cross(const int sat, int const * const sum, int * const chipSeq) {
 	for (int delta = 0; delta < 1023; delta++) {
 		int product = 0;
@@ -152,6 +148,8 @@ int main(int argc, char* argv[]) {
 
 		cross(sat + 1, data, seq);
 	}
+
+	cout << "Press to exit..."; cin.get();
 	
 	return 0;
 }
